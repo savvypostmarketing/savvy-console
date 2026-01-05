@@ -29,6 +29,7 @@ class JobPositionController extends Controller
                     'location_type' => $position->location_type,
                     'location_type_label' => $this->getLocalizedLocationType($position->location_type, $locale),
                     'location' => $position->location,
+                    'salary_range' => $position->salary_range,
                     'description' => $position->getLocalizedDescription($locale),
                     'apply_url' => $position->apply_link,
                     'is_featured' => $position->is_featured,

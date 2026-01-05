@@ -93,7 +93,21 @@ class VisitorAnalyticsController extends Controller
 
         // Calculate intent score breakdown
         $intentService = new IntentScoringService();
-        $intentBreakdown = $intentService->calculateScore($session);
+        $intentResult = $intentService->calculateScore($session);
+
+        // Transform to match frontend interface
+        $intentBreakdown = [
+            'total' => (int) round($intentResult['score']),
+            'level' => $intentResult['level'],
+            'components' => [
+                'page_views' => $intentResult['signals']['page_views']['score'] ?? 0,
+                'time_on_site' => $intentResult['signals']['time_on_site']['score'] ?? 0,
+                'engagement' => $intentResult['signals']['engagement']['score'] ?? 0,
+                'form_interaction' => $intentResult['signals']['form_interaction']['score'] ?? 0,
+                'conversion_signals' => $intentResult['signals']['conversion_signals']['score'] ?? 0,
+                'returning_visitor' => $intentResult['signals']['return_visitor']['score'] ?? 0,
+            ],
+        ];
 
         return Inertia::render('Admin/Analytics/Session', [
             'session' => $this->formatSession($session, true),
