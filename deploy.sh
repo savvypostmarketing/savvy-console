@@ -14,7 +14,7 @@ git pull origin main
 # Install/update PHP dependencies
 echo "📦 Installing Composer dependencies..."
 composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
-
+php artisan key:generate
 # Install/update Node dependencies
 echo "📦 Installing NPM dependencies..."
 npm ci

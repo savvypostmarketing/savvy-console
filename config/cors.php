@@ -22,13 +22,13 @@ return [
     'allowed_origins' => [
         'http://localhost:3000',
         'https://localhost:3000',
-        'https://savvypost.com',
-        'https://www.savvypost.com',
+        'https://savvypostmarketing.com',
+        'https://www.savvypostmarketing.com',
         env('FRONTEND_URL', 'http://localhost:3000'),
     ],
 
     'allowed_origins_patterns' => [
-        '#^https?://.*\.savvypost\.com$#',
+        '#^https?://.*\.savvypostmarketing\.com$#',
         '#^https?://.*\.vercel\.app$#',
     ],
 
