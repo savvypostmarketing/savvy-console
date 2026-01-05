@@ -101,11 +101,17 @@ class PageView extends Model
 
     public function markAsExit(string $exitUrl = null): void
     {
+        $timeOnPage = 0;
+        if ($this->entered_at) {
+            // Use absolute diff and cast to int to avoid negative/float values
+            $timeOnPage = (int) abs(now()->diffInSeconds($this->entered_at));
+        }
+
         $this->update([
             'is_exit_page' => true,
             'exit_url' => $exitUrl,
             'exited_at' => now(),
-            'time_on_page_seconds' => now()->diffInSeconds($this->entered_at),
+            'time_on_page_seconds' => $timeOnPage,
         ]);
 
         // Mark as bounced if no interaction
@@ -118,9 +124,9 @@ class PageView extends Model
     public function getDurationAttribute(): int
     {
         if ($this->exited_at && $this->entered_at) {
-            return $this->exited_at->diffInSeconds($this->entered_at);
+            return (int) abs($this->exited_at->diffInSeconds($this->entered_at));
         }
-        return $this->entered_at ? now()->diffInSeconds($this->entered_at) : 0;
+        return $this->entered_at ? (int) abs(now()->diffInSeconds($this->entered_at)) : 0;
     }
 
     // Static helpers

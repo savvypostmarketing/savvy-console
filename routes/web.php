@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\JobPositionController;
 use App\Http\Controllers\Admin\LeadController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\PortfolioController;
@@ -181,10 +182,24 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::put('/testimonials/{testimonial}', [TestimonialController::class, 'update'])->name('testimonials.update');
         Route::patch('/testimonials/{testimonial}/toggle-published', [TestimonialController::class, 'togglePublished'])->name('testimonials.toggle-published');
         Route::patch('/testimonials/{testimonial}/toggle-featured', [TestimonialController::class, 'toggleFeatured'])->name('testimonials.toggle-featured');
+        Route::patch('/testimonials/update-order', [TestimonialController::class, 'updateOrder'])->name('testimonials.update-order');
     });
 
     Route::middleware('permission:delete-testimonials')->group(function () {
         Route::delete('/testimonials/{testimonial}', [TestimonialController::class, 'destroy'])->name('testimonials.destroy');
+    });
+
+    // Job Positions Management (requires manage-settings permission)
+    Route::middleware('permission:manage-settings')->prefix('job-positions')->name('job-positions.')->group(function () {
+        Route::get('/', [JobPositionController::class, 'index'])->name('index');
+        Route::get('/create', [JobPositionController::class, 'create'])->name('create');
+        Route::post('/', [JobPositionController::class, 'store'])->name('store');
+        Route::get('/{jobPosition}/edit', [JobPositionController::class, 'edit'])->name('edit');
+        Route::put('/{jobPosition}', [JobPositionController::class, 'update'])->name('update');
+        Route::delete('/{jobPosition}', [JobPositionController::class, 'destroy'])->name('destroy');
+        Route::patch('/{jobPosition}/toggle-active', [JobPositionController::class, 'toggleActive'])->name('toggle-active');
+        Route::patch('/{jobPosition}/toggle-featured', [JobPositionController::class, 'toggleFeatured'])->name('toggle-featured');
+        Route::patch('/update-order', [JobPositionController::class, 'updateOrder'])->name('update-order');
     });
 
     // Visitor Analytics (Super Admin only)

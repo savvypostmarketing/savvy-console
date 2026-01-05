@@ -169,10 +169,15 @@ class VisitorSession extends Model
 
     public function endSession(): void
     {
+        $totalTime = 0;
+        if ($this->started_at) {
+            $totalTime = (int) abs(now()->diffInSeconds($this->started_at));
+        }
+
         $this->update([
             'status' => 'ended',
             'ended_at' => now(),
-            'total_time_seconds' => now()->diffInSeconds($this->started_at),
+            'total_time_seconds' => $totalTime,
         ]);
     }
 
@@ -238,7 +243,7 @@ class VisitorSession extends Model
     public function getDurationAttribute(): int
     {
         $endTime = $this->ended_at ?? now();
-        return $this->started_at ? $endTime->diffInSeconds($this->started_at) : 0;
+        return $this->started_at ? (int) abs($endTime->diffInSeconds($this->started_at)) : 0;
     }
 
     public function getIsActiveAttribute(): bool

@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\JobPositionController;
 use App\Http\Controllers\Api\LeadController;
 use App\Http\Controllers\Api\PortfolioController;
 use App\Http\Controllers\Api\TestimonialController;
@@ -97,4 +98,10 @@ Route::prefix('tracking')->group(function () {
     // End session
     Route::post('/end-session', [VisitorTrackingController::class, 'endSession'])
         ->middleware('throttle:30,1');
+});
+
+// Job Positions routes (public)
+Route::prefix('job-positions')->group(function () {
+    Route::get('/', [JobPositionController::class, 'index'])
+        ->middleware('throttle:60,1');
 });

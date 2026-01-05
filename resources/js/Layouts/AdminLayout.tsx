@@ -32,6 +32,7 @@ import {
     Settings24Regular,
     Star24Regular,
     DataUsage24Regular,
+    Briefcase24Regular,
 } from '@fluentui/react-icons';
 import type { PageProps } from '@/interfaces';
 import { useFlash, usePermissions } from '@/hooks';
@@ -172,6 +173,12 @@ const NAV_ITEMS: NavSection[] = [
                 href: '/admin/testimonials',
                 icon: Star24Regular,
                 permission: 'view-testimonials',
+            },
+            {
+                name: 'Job Positions',
+                href: '/admin/job-positions',
+                icon: Briefcase24Regular,
+                permission: 'manage-settings',
             },
             {
                 name: 'Users',

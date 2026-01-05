@@ -272,4 +272,22 @@ class TestimonialController extends Controller
             ? 'Testimonial marked as featured.'
             : 'Testimonial unmarked as featured.');
     }
+
+    /**
+     * Update sort order for testimonials.
+     */
+    public function updateOrder(Request $request)
+    {
+        $validated = $request->validate([
+            'testimonials' => 'required|array',
+            'testimonials.*.id' => 'required|exists:testimonials,id',
+            'testimonials.*.sort_order' => 'required|integer|min:0',
+        ]);
+
+        foreach ($validated['testimonials'] as $item) {
+            Testimonial::where('id', $item['id'])->update(['sort_order' => $item['sort_order']]);
+        }
+
+        return back()->with('success', 'Order updated successfully.');
+    }
 }

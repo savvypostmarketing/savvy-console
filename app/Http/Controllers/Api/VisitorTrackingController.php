@@ -386,7 +386,7 @@ class VisitorTrackingController extends Controller
             'is_engagement_event' => VisitorEvent::isEngagementEvent($eventType),
             'time_since_page_load_ms' => $data['time_since_page_load_ms'] ?? null,
             'time_since_session_start_ms' => $session->started_at
-                ? now()->diffInMilliseconds($session->started_at)
+                ? (int) abs(now()->diffInMilliseconds($session->started_at))
                 : null,
             'occurred_at' => now(),
         ]);

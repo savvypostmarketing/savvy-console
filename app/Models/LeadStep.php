@@ -48,7 +48,7 @@ class LeadStep extends Model
     public function calculateTimeSpent(): ?int
     {
         if ($this->started_at && $this->completed_at) {
-            return $this->completed_at->diffInSeconds($this->started_at);
+            return (int) abs($this->completed_at->diffInSeconds($this->started_at));
         }
         return null;
     }
@@ -58,9 +58,14 @@ class LeadStep extends Model
      */
     public function markAsCompleted(): void
     {
+        $completedAt = now();
+        $timeSpent = $this->started_at
+            ? (int) abs($completedAt->diffInSeconds($this->started_at))
+            : null;
+
         $this->update([
-            'completed_at' => now(),
-            'time_spent_seconds' => $this->calculateTimeSpent(),
+            'completed_at' => $completedAt,
+            'time_spent_seconds' => $timeSpent,
         ]);
     }
 }
