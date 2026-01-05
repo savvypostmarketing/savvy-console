@@ -130,13 +130,18 @@ class VisitorTrackingController extends Controller
             'title' => 'nullable|string|max:255',
             'previous_url' => 'nullable|string|max:500',
             'previous_path' => 'nullable|string|max:500',
-            'viewport_width' => 'nullable|integer',
-            'viewport_height' => 'nullable|integer',
-            'document_height' => 'nullable|integer',
+            'viewport_width' => 'nullable|integer|min:0|max:10000',
+            'viewport_height' => 'nullable|integer|min:0|max:10000',
+            'document_height' => 'nullable|integer|min:0|max:1000000',
             'load_time_ms' => 'nullable|integer',
             'dom_ready_ms' => 'nullable|integer',
             'fcp_ms' => 'nullable|integer',
         ]);
+
+        // Sanitize timing values to prevent overflow (must be positive and within int range)
+        $validated['load_time_ms'] = $this->sanitizeTimingValue($validated['load_time_ms'] ?? null);
+        $validated['dom_ready_ms'] = $this->sanitizeTimingValue($validated['dom_ready_ms'] ?? null);
+        $validated['fcp_ms'] = $this->sanitizeTimingValue($validated['fcp_ms'] ?? null);
 
         $session = VisitorSession::where('session_token', $validated['session_token'])->first();
 
@@ -496,5 +501,23 @@ class VisitorTrackingController extends Controller
         ];
 
         return $mapping[$eventType] ?? VisitorEvent::CATEGORY_ENGAGEMENT;
+    }
+
+    /**
+     * Sanitize timing values to prevent integer overflow in PostgreSQL.
+     * Values must be positive and within 32-bit integer range.
+     */
+    private function sanitizeTimingValue(?int $value): ?int
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        // Must be positive and within reasonable range (max 1 hour in ms)
+        if ($value < 0 || $value > 3600000) {
+            return null;
+        }
+
+        return $value;
     }
 }
