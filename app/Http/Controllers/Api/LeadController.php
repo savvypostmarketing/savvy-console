@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\NewLeadNotification;
 use App\Models\Lead;
 use App\Models\LeadStep;
 use App\Models\LeadAttempt;
@@ -11,6 +12,8 @@ use App\Services\SpamDetectionService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 
@@ -231,6 +234,11 @@ class LeadController extends Controller
         try {
             $lead->markAsCompleted();
 
+            // Send email notification if not spam
+            if (!$lead->is_spam) {
+                $this->sendLeadNotification($lead);
+            }
+
             $this->logAttempt($request, $lead->id, 'complete', null, false, true);
 
             return response()->json([
@@ -372,5 +380,34 @@ class LeadController extends Controller
             'success' => $success,
             'error_message' => $errorMessage,
         ]);
+    }
+
+    /**
+     * Send email notification for new lead
+     */
+    protected function sendLeadNotification(Lead $lead): void
+    {
+        $adminEmail = config('mail.admin_email');
+
+        if (empty($adminEmail)) {
+            Log::warning('Admin email not configured. Lead notification not sent.', [
+                'lead_id' => $lead->uuid,
+            ]);
+            return;
+        }
+
+        try {
+            Mail::to($adminEmail)->send(new NewLeadNotification($lead));
+
+            Log::info('Lead notification email sent', [
+                'lead_id' => $lead->uuid,
+                'admin_email' => $adminEmail,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send lead notification email', [
+                'lead_id' => $lead->uuid,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

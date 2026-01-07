@@ -304,4 +304,95 @@ class PortfolioAdminTest extends TestCase
         $this->assertCount(1, $featured);
         $this->assertEquals('Featured', $featured->first()->title);
     }
+
+    /** @test */
+    public function portfolio_can_have_project_overview(): void
+    {
+        $portfolio = Portfolio::create([
+            'title' => 'Test Overview',
+            'slug' => 'test-overview',
+            'industry_id' => $this->industry->id,
+            'project_overview' => 'This is a comprehensive project overview.',
+            'project_overview_es' => 'Esta es una descripción general del proyecto.',
+            'sort_order' => 1,
+        ]);
+
+        $this->assertEquals('This is a comprehensive project overview.', $portfolio->project_overview);
+        $this->assertEquals('Esta es una descripción general del proyecto.', $portfolio->project_overview_es);
+    }
+
+    /** @test */
+    public function portfolio_can_have_video_intro_text(): void
+    {
+        $portfolio = Portfolio::create([
+            'title' => 'Test Video Intro',
+            'slug' => 'test-video-intro',
+            'industry_id' => $this->industry->id,
+            'video_url' => 'https://youtube.com/watch?v=abc123',
+            'video_intro_text' => 'Watch our video presentation.',
+            'video_intro_text_es' => 'Vea nuestra presentación en video.',
+            'sort_order' => 1,
+        ]);
+
+        $this->assertEquals('Watch our video presentation.', $portfolio->video_intro_text);
+        $this->assertEquals('Vea nuestra presentación en video.', $portfolio->video_intro_text_es);
+    }
+
+    /** @test */
+    public function portfolio_can_have_seo_fields(): void
+    {
+        $portfolio = Portfolio::create([
+            'title' => 'Test SEO',
+            'slug' => 'test-seo',
+            'industry_id' => $this->industry->id,
+            'meta_title' => 'Custom SEO Title',
+            'meta_title_es' => 'Título SEO Personalizado',
+            'meta_description' => 'Custom meta description for SEO.',
+            'meta_description_es' => 'Descripción meta personalizada para SEO.',
+            'sort_order' => 1,
+        ]);
+
+        $this->assertEquals('Custom SEO Title', $portfolio->meta_title);
+        $this->assertEquals('Título SEO Personalizado', $portfolio->meta_title_es);
+        $this->assertEquals('Custom meta description for SEO.', $portfolio->meta_description);
+        $this->assertEquals('Descripción meta personalizada para SEO.', $portfolio->meta_description_es);
+    }
+
+    /** @test */
+    public function portfolio_localized_project_overview_returns_spanish_when_locale_is_es(): void
+    {
+        $portfolio = Portfolio::create([
+            'title' => 'Test Localization',
+            'slug' => 'test-localization',
+            'industry_id' => $this->industry->id,
+            'project_overview' => 'English overview',
+            'project_overview_es' => 'Spanish overview',
+            'sort_order' => 1,
+        ]);
+
+        app()->setLocale('es');
+        $this->assertEquals('Spanish overview', $portfolio->localized_project_overview);
+
+        app()->setLocale('en');
+        $this->assertEquals('English overview', $portfolio->localized_project_overview);
+    }
+
+    /** @test */
+    public function portfolio_localized_meta_title_returns_spanish_when_locale_is_es(): void
+    {
+        $portfolio = Portfolio::create([
+            'title' => 'Test Meta Localization',
+            'slug' => 'test-meta-localization',
+            'industry_id' => $this->industry->id,
+            'meta_title' => 'English Meta Title',
+            'meta_title_es' => 'Spanish Meta Title',
+            'sort_order' => 1,
+        ]);
+
+        app()->setLocale('es');
+        $this->assertEquals('Spanish Meta Title', $portfolio->localized_meta_title);
+
+        app()->setLocale('en');
+        $this->assertEquals('English Meta Title', $portfolio->localized_meta_title);
+    }
 }

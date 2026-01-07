@@ -3,8 +3,12 @@
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\JobPositionController;
 use App\Http\Controllers\Admin\LeadController;
+use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\PortfolioController;
+use App\Http\Controllers\Admin\PostCategoryController;
+use App\Http\Controllers\Admin\PostController;
+use App\Http\Controllers\Admin\PostTagController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\TestimonialController;
@@ -200,6 +204,82 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::patch('/{jobPosition}/toggle-active', [JobPositionController::class, 'toggleActive'])->name('toggle-active');
         Route::patch('/{jobPosition}/toggle-featured', [JobPositionController::class, 'toggleFeatured'])->name('toggle-featured');
         Route::patch('/update-order', [JobPositionController::class, 'updateOrder'])->name('update-order');
+    });
+
+    // Blog Posts Management
+    Route::get('/posts', [PostController::class, 'index'])
+        ->middleware('permission:view-posts')
+        ->name('posts.index');
+
+    Route::get('/posts/create', [PostController::class, 'create'])
+        ->middleware('permission:create-posts')
+        ->name('posts.create');
+
+    Route::post('/posts', [PostController::class, 'store'])
+        ->middleware('permission:create-posts')
+        ->name('posts.store');
+
+    Route::post('/posts/upload-image', [PostController::class, 'uploadImage'])
+        ->middleware('permission:edit-posts')
+        ->name('posts.upload-image');
+
+    Route::post('/posts/fetch-link', [PostController::class, 'fetchLink'])
+        ->middleware('permission:edit-posts')
+        ->name('posts.fetch-link');
+
+    Route::get('/posts/{post}', [PostController::class, 'show'])
+        ->middleware('permission:view-posts')
+        ->name('posts.show');
+
+    Route::get('/posts/{post}/edit', [PostController::class, 'edit'])
+        ->middleware('permission:edit-posts')
+        ->name('posts.edit');
+
+    Route::post('/posts/{post}', [PostController::class, 'update'])
+        ->middleware('permission:edit-posts')
+        ->name('posts.update');
+
+    Route::post('/posts/{post}/toggle-published', [PostController::class, 'togglePublished'])
+        ->middleware('permission:edit-posts')
+        ->name('posts.toggle-published');
+
+    Route::post('/posts/{post}/toggle-featured', [PostController::class, 'toggleFeatured'])
+        ->middleware('permission:edit-posts')
+        ->name('posts.toggle-featured');
+
+    Route::delete('/posts/{post}', [PostController::class, 'destroy'])
+        ->middleware('permission:delete-posts')
+        ->name('posts.destroy');
+
+    // Post Categories Management
+    Route::middleware('permission:manage-posts')->prefix('post-categories')->name('post-categories.')->group(function () {
+        Route::get('/', [PostCategoryController::class, 'index'])->name('index');
+        Route::get('/create', [PostCategoryController::class, 'create'])->name('create');
+        Route::post('/', [PostCategoryController::class, 'store'])->name('store');
+        Route::get('/{postCategory}/edit', [PostCategoryController::class, 'edit'])->name('edit');
+        Route::put('/{postCategory}', [PostCategoryController::class, 'update'])->name('update');
+        Route::delete('/{postCategory}', [PostCategoryController::class, 'destroy'])->name('destroy');
+        Route::patch('/{postCategory}/toggle-active', [PostCategoryController::class, 'toggleActive'])->name('toggle-active');
+        Route::patch('/update-order', [PostCategoryController::class, 'updateOrder'])->name('update-order');
+    });
+
+    // Post Tags Management
+    Route::middleware('permission:manage-posts')->prefix('post-tags')->name('post-tags.')->group(function () {
+        Route::get('/', [PostTagController::class, 'index'])->name('index');
+        Route::get('/create', [PostTagController::class, 'create'])->name('create');
+        Route::post('/', [PostTagController::class, 'store'])->name('store');
+        Route::get('/{postTag}/edit', [PostTagController::class, 'edit'])->name('edit');
+        Route::put('/{postTag}', [PostTagController::class, 'update'])->name('update');
+        Route::delete('/{postTag}', [PostTagController::class, 'destroy'])->name('destroy');
+        Route::patch('/{postTag}/toggle-active', [PostTagController::class, 'toggleActive'])->name('toggle-active');
+    });
+
+    // Media Upload (centralized)
+    Route::middleware('permission:edit-posts')->prefix('media')->name('media.')->group(function () {
+        Route::post('/upload', [MediaController::class, 'upload'])->name('upload');
+        Route::post('/upload-image', [MediaController::class, 'uploadImage'])->name('upload-image');
+        Route::delete('/delete', [MediaController::class, 'delete'])->name('delete');
+        Route::post('/fetch-link', [MediaController::class, 'fetchLink'])->name('fetch-link');
     });
 
     // Visitor Analytics (Super Admin only)

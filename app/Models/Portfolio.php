@@ -32,6 +32,8 @@ class Portfolio extends Model
         'industry_id',
         'description',
         'description_es',
+        'project_overview',
+        'project_overview_es',
         'challenge',
         'challenge_es',
         'solution',
@@ -46,15 +48,23 @@ class Portfolio extends Model
         'testimonial_avatar',
         'video_url',
         'video_thumbnail',
+        'video_intro_text',
+        'video_intro_text_es',
         'is_published',
         'is_featured',
+        'published_at',
         'sort_order',
+        'meta_title',
+        'meta_title_es',
+        'meta_description',
+        'meta_description_es',
     ];
 
     protected $casts = [
         'is_published' => 'boolean',
         'is_featured' => 'boolean',
         'sort_order' => 'integer',
+        'published_at' => 'datetime',
     ];
 
     /**
@@ -190,5 +200,41 @@ class Portfolio extends Model
     {
         $locale = app()->getLocale();
         return $locale === 'es' && $this->testimonial_role_es ? $this->testimonial_role_es : $this->testimonial_role;
+    }
+
+    /**
+     * Get localized project overview.
+     */
+    public function getLocalizedProjectOverviewAttribute(): ?string
+    {
+        $locale = app()->getLocale();
+        return $locale === 'es' && $this->project_overview_es ? $this->project_overview_es : $this->project_overview;
+    }
+
+    /**
+     * Get localized video intro text.
+     */
+    public function getLocalizedVideoIntroTextAttribute(): ?string
+    {
+        $locale = app()->getLocale();
+        return $locale === 'es' && $this->video_intro_text_es ? $this->video_intro_text_es : $this->video_intro_text;
+    }
+
+    /**
+     * Get localized meta title.
+     */
+    public function getLocalizedMetaTitleAttribute(): ?string
+    {
+        $locale = app()->getLocale();
+        return $locale === 'es' && $this->meta_title_es ? $this->meta_title_es : $this->meta_title;
+    }
+
+    /**
+     * Get localized meta description.
+     */
+    public function getLocalizedMetaDescriptionAttribute(): ?string
+    {
+        $locale = app()->getLocale();
+        return $locale === 'es' && $this->meta_description_es ? $this->meta_description_es : $this->meta_description;
     }
 }

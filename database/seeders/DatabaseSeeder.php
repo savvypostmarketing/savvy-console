@@ -20,8 +20,10 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             AdminUserSeeder::class,
             PortfolioServicesAndIndustriesSeeder::class,
+            PortfolioSampleSeeder::class,
             SettingsSeeder::class,
             TestimonialSeeder::class,
+            BlogSeeder::class,
         ]);
     }
 }

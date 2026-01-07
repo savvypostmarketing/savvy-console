@@ -110,6 +110,8 @@ export default function CreatePortfolio({ industries, services }: CreatePortfoli
         services: [],
         description: '',
         description_es: '',
+        project_overview: '',
+        project_overview_es: '',
         challenge: '',
         challenge_es: '',
         solution: '',
@@ -124,9 +126,15 @@ export default function CreatePortfolio({ industries, services }: CreatePortfoli
         testimonial_avatar: null,
         video_url: '',
         video_thumbnail: null,
+        video_intro_text: '',
+        video_intro_text_es: '',
         is_published: false,
         is_featured: false,
         sort_order: 0,
+        meta_title: '',
+        meta_title_es: '',
+        meta_description: '',
+        meta_description_es: '',
         stats: [],
         features: [],
         results: [],
@@ -302,10 +310,12 @@ export default function CreatePortfolio({ industries, services }: CreatePortfoli
                 <form onSubmit={handleSubmit} className={styles.form}>
                     <TabList selectedValue={activeTab} onTabSelect={handleTabChange}>
                         <Tab value="basic">Basic Info</Tab>
+                        <Tab value="overview">Project Overview</Tab>
                         <Tab value="content">Content</Tab>
                         <Tab value="stats">Stats & Features</Tab>
                         <Tab value="testimonial">Testimonial</Tab>
                         <Tab value="video">Video</Tab>
+                        <Tab value="seo">SEO</Tab>
                     </TabList>
 
                     <div className={styles.tabContent}>
@@ -425,6 +435,38 @@ export default function CreatePortfolio({ industries, services }: CreatePortfoli
                                         onChange={(_, d) => setData('is_featured', d.checked)}
                                         label="Featured"
                                     />
+                                </div>
+                            </>
+                        )}
+
+                        {/* Project Overview Tab */}
+                        {activeTab === 'overview' && (
+                            <>
+                                <Text size={400} style={{ marginBottom: '16px', display: 'block' }}>
+                                    Provide a comprehensive overview of the project that will be
+                                    displayed prominently.
+                                </Text>
+                                <div className={styles.row}>
+                                    <Field label="Project Overview (EN)">
+                                        <Textarea
+                                            value={data.project_overview}
+                                            onChange={(e) =>
+                                                setData('project_overview', e.target.value)
+                                            }
+                                            placeholder="A comprehensive overview of the project..."
+                                            rows={8}
+                                        />
+                                    </Field>
+                                    <Field label="Project Overview (ES)">
+                                        <Textarea
+                                            value={data.project_overview_es}
+                                            onChange={(e) =>
+                                                setData('project_overview_es', e.target.value)
+                                            }
+                                            placeholder="Una visión general del proyecto..."
+                                            rows={8}
+                                        />
+                                    </Field>
                                 </div>
                             </>
                         )}
@@ -805,6 +847,29 @@ export default function CreatePortfolio({ industries, services }: CreatePortfoli
                                     />
                                 </Field>
 
+                                <div className={styles.row}>
+                                    <Field label="Video Intro Text (EN)">
+                                        <Textarea
+                                            value={data.video_intro_text}
+                                            onChange={(e) =>
+                                                setData('video_intro_text', e.target.value)
+                                            }
+                                            placeholder="Introductory text for the video section"
+                                            rows={3}
+                                        />
+                                    </Field>
+                                    <Field label="Video Intro Text (ES)">
+                                        <Textarea
+                                            value={data.video_intro_text_es}
+                                            onChange={(e) =>
+                                                setData('video_intro_text_es', e.target.value)
+                                            }
+                                            placeholder="Texto introductorio para la sección de video"
+                                            rows={3}
+                                        />
+                                    </Field>
+                                </div>
+
                                 <Divider />
 
                                 <div className={styles.section}>
@@ -885,6 +950,56 @@ export default function CreatePortfolio({ industries, services }: CreatePortfoli
                                             />
                                         </div>
                                     ))}
+                                </div>
+                            </>
+                        )}
+
+                        {/* SEO Tab */}
+                        {activeTab === 'seo' && (
+                            <>
+                                <Text size={400} style={{ marginBottom: '16px', display: 'block' }}>
+                                    Optimize this portfolio entry for search engines.
+                                </Text>
+                                <div className={styles.row}>
+                                    <Field label="Meta Title (EN)">
+                                        <Input
+                                            value={data.meta_title}
+                                            onChange={(e) => setData('meta_title', e.target.value)}
+                                            placeholder="SEO title (defaults to project title)"
+                                        />
+                                    </Field>
+                                    <Field label="Meta Title (ES)">
+                                        <Input
+                                            value={data.meta_title_es}
+                                            onChange={(e) =>
+                                                setData('meta_title_es', e.target.value)
+                                            }
+                                            placeholder="Título SEO (usa el título del proyecto por defecto)"
+                                        />
+                                    </Field>
+                                </div>
+
+                                <div className={styles.row}>
+                                    <Field label="Meta Description (EN)">
+                                        <Textarea
+                                            value={data.meta_description}
+                                            onChange={(e) =>
+                                                setData('meta_description', e.target.value)
+                                            }
+                                            placeholder="SEO description (defaults to project description)"
+                                            rows={3}
+                                        />
+                                    </Field>
+                                    <Field label="Meta Description (ES)">
+                                        <Textarea
+                                            value={data.meta_description_es}
+                                            onChange={(e) =>
+                                                setData('meta_description_es', e.target.value)
+                                            }
+                                            placeholder="Descripción SEO (usa la descripción del proyecto por defecto)"
+                                            rows={3}
+                                        />
+                                    </Field>
                                 </div>
                             </>
                         )}

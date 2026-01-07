@@ -66,6 +66,15 @@ class RolesAndPermissionsSeeder extends Seeder
                 ['name' => 'Edit Testimonials', 'slug' => 'edit-testimonials', 'description' => 'Can edit testimonials'],
                 ['name' => 'Delete Testimonials', 'slug' => 'delete-testimonials', 'description' => 'Can delete testimonials'],
             ],
+
+            // Blog Posts Management
+            'posts' => [
+                ['name' => 'View Posts', 'slug' => 'view-posts', 'description' => 'Can view blog posts list and details'],
+                ['name' => 'Create Posts', 'slug' => 'create-posts', 'description' => 'Can create new blog posts'],
+                ['name' => 'Edit Posts', 'slug' => 'edit-posts', 'description' => 'Can edit blog posts'],
+                ['name' => 'Delete Posts', 'slug' => 'delete-posts', 'description' => 'Can delete blog posts'],
+                ['name' => 'Manage Posts', 'slug' => 'manage-posts', 'description' => 'Can manage post categories and tags'],
+            ],
         ];
 
         // Create all permissions
@@ -106,6 +115,7 @@ class RolesAndPermissionsSeeder extends Seeder
                     'view-settings', 'edit-settings',
                     'view-portfolio', 'create-portfolio', 'edit-portfolio', 'delete-portfolio',
                     'view-testimonials', 'create-testimonials', 'edit-testimonials', 'delete-testimonials',
+                    'view-posts', 'create-posts', 'edit-posts', 'delete-posts', 'manage-posts',
                 ],
             ],
             [
@@ -121,6 +131,7 @@ class RolesAndPermissionsSeeder extends Seeder
                     'view-roles',
                     'view-portfolio', 'edit-portfolio',
                     'view-testimonials', 'edit-testimonials',
+                    'view-posts', 'create-posts', 'edit-posts',
                 ],
             ],
             [

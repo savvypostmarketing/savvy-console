@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\JobPositionController;
 use App\Http\Controllers\Api\LeadController;
 use App\Http\Controllers\Api\PortfolioController;
+use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\TestimonialController;
 use App\Http\Controllers\Api\VisitorTrackingController;
 
@@ -104,4 +105,28 @@ Route::prefix('tracking')->group(function () {
 Route::prefix('job-positions')->group(function () {
     Route::get('/', [JobPositionController::class, 'index'])
         ->middleware('throttle:60,1');
+});
+
+// Blog Posts routes (public)
+Route::prefix('posts')->group(function () {
+    Route::get('/', [PostController::class, 'index'])
+        ->middleware('throttle:60,1');
+
+    Route::get('/categories', [PostController::class, 'categories'])
+        ->middleware('throttle:60,1');
+
+    Route::get('/tags', [PostController::class, 'tags'])
+        ->middleware('throttle:60,1');
+
+    Route::get('/popular', [PostController::class, 'popular'])
+        ->middleware('throttle:60,1');
+
+    Route::get('/{slug}', [PostController::class, 'show'])
+        ->middleware('throttle:60,1');
+
+    Route::get('/{slug}/related', [PostController::class, 'related'])
+        ->middleware('throttle:60,1');
+
+    Route::post('/{slug}/like', [PostController::class, 'like'])
+        ->middleware('throttle:30,1');
 });
