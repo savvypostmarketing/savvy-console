@@ -74,12 +74,26 @@ function BlockEditor({
             return;
         }
 
+        // Clean initial data to avoid invalid blocks
+        const cleanInitialData = value
+            ? {
+                  ...value,
+                  blocks: value.blocks.filter((block) => {
+                      if (block.type === 'paragraph') {
+                          const text = (block.data as { text?: string }).text;
+                          return text !== undefined && text !== '';
+                      }
+                      return true;
+                  }),
+              }
+            : undefined;
+
         const editor = new EditorJS({
             holder: holderRef.current,
             readOnly,
             placeholder,
-            data: value ?? undefined,
-            autofocus: true,
+            data: cleanInitialData,
+            autofocus: !readOnly,
             defaultBlock: 'paragraph',
             // Insert new blocks at the end, not at the beginning
             inlineToolbar: ['bold', 'italic', 'link', 'marker', 'inlineCode'],
@@ -88,6 +102,9 @@ function BlockEditor({
                 paragraph: {
                     class: Paragraph as any,
                     inlineToolbar: true,
+                    config: {
+                        preserveBlank: true,
+                    },
                 },
                 header: {
                     class: Header as any,
@@ -193,7 +210,19 @@ function BlockEditor({
                 void api.saver
                     .save()
                     .then((data) => {
-                        onChange(data as EditorJSData);
+                        // Filter out invalid/empty blocks
+                        const cleanedData = {
+                            ...data,
+                            blocks: data.blocks.filter((block) => {
+                                // Keep block if it has valid data
+                                if (block.type === 'paragraph') {
+                                    const text = (block.data as { text?: string }).text;
+                                    return text !== undefined;
+                                }
+                                return true;
+                            }),
+                        };
+                        onChange(cleanedData as EditorJSData);
                     })
                     .catch((err: unknown) => {
                         console.error('Editor.js save error:', err);
