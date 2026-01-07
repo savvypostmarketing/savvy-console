@@ -33,6 +33,9 @@ import {
     Star24Regular,
     DataUsage24Regular,
     Briefcase24Regular,
+    News24Regular,
+    Tag24Regular,
+    FolderOpen24Regular,
 } from '@fluentui/react-icons';
 import type { PageProps } from '@/interfaces';
 import { useFlash, usePermissions } from '@/hooks';
@@ -191,6 +194,29 @@ const NAV_ITEMS: NavSection[] = [
                 href: '/admin/roles',
                 icon: PersonAccounts24Regular,
                 permission: 'view-roles',
+            },
+        ],
+    },
+    {
+        section: 'Blog',
+        items: [
+            {
+                name: 'Posts',
+                href: '/admin/posts',
+                icon: News24Regular,
+                permission: 'view-posts',
+            },
+            {
+                name: 'Categories',
+                href: '/admin/post-categories',
+                icon: FolderOpen24Regular,
+                permission: 'manage-posts',
+            },
+            {
+                name: 'Tags',
+                href: '/admin/post-tags',
+                icon: Tag24Regular,
+                permission: 'manage-posts',
             },
         ],
     },
