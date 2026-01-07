@@ -79,6 +79,10 @@ function BlockEditor({
             readOnly,
             placeholder,
             data: value ?? undefined,
+            autofocus: true,
+            defaultBlock: 'paragraph',
+            // Insert new blocks at the end, not at the beginning
+            inlineToolbar: ['bold', 'italic', 'link', 'marker', 'inlineCode'],
             /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
             tools: {
                 paragraph: {

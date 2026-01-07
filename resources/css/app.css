@@ -9,3 +9,88 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+/* Editor.js Styles */
+.codex-editor {
+    position: relative;
+}
+
+.codex-editor__redactor {
+    padding-bottom: 100px !important;
+}
+
+.ce-block__content {
+    max-width: 100%;
+    margin: 0;
+}
+
+.ce-toolbar__content {
+    max-width: 100%;
+}
+
+.ce-toolbar__plus {
+    left: -34px;
+}
+
+.ce-toolbar__actions {
+    right: -34px;
+}
+
+/* Fix for block insertion - ensure blocks are added at cursor position */
+.ce-block {
+    position: relative;
+}
+
+.ce-paragraph {
+    line-height: 1.6;
+}
+
+.ce-header {
+    padding: 0.5em 0;
+}
+
+/* Image tool styles */
+.image-tool {
+    --bg-color: #f9f9f9;
+    --border-color: #e0e0e0;
+}
+
+.image-tool__image {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Quote styles */
+.cdx-quote__text {
+    font-style: italic;
+    border-left: 3px solid #0078d4;
+    padding-left: 16px;
+}
+
+/* Code block styles */
+.ce-code__textarea {
+    font-family: 'Fira Code', 'Monaco', monospace;
+    background: #1e1e1e;
+    color: #d4d4d4;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+/* Table styles */
+.tc-table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.tc-table td {
+    border: 1px solid #e0e0e0;
+    padding: 8px 12px;
+}
+
+/* Warning block styles */
+.cdx-warning {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 16px;
+    border-radius: 4px;
+}
