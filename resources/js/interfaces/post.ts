@@ -73,6 +73,7 @@ export interface Post {
     tag_ids?: number[];
 }
 
+// Using simplified types for content to satisfy Inertia's FormDataType constraint
 export interface PostFormData {
     title: string;
     title_es: string;
@@ -80,8 +81,8 @@ export interface PostFormData {
     category_id: string | number;
     excerpt: string;
     excerpt_es: string;
-    content: EditorJSData | null;
-    content_es: EditorJSData | null;
+    content: EditorJSData | string | null;
+    content_es: EditorJSData | string | null;
     featured_image: File | null;
     featured_image_alt: string;
     featured_image_alt_es: string;

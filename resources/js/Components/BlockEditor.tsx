@@ -79,14 +79,14 @@ function BlockEditor({
             readOnly,
             placeholder,
             data: value ?? undefined,
-            /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+            /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
             tools: {
                 paragraph: {
-                    class: Paragraph,
+                    class: Paragraph as any,
                     inlineToolbar: true,
                 },
                 header: {
-                    class: Header,
+                    class: Header as any,
                     config: {
                         placeholder: 'Enter a header',
                         levels: [1, 2, 3, 4, 5, 6],
@@ -132,7 +132,7 @@ function BlockEditor({
                     },
                 },
                 table: {
-                    class: Table,
+                    class: Table as any,
                     inlineToolbar: true,
                     config: {
                         rows: 2,
@@ -158,7 +158,7 @@ function BlockEditor({
                     class: InlineCode,
                 },
                 marker: {
-                    class: Marker,
+                    class: Marker as any,
                 },
                 linkTool: {
                     class: LinkTool,
@@ -224,6 +224,7 @@ function BlockEditor({
                 void editorRef.current?.render(value);
             }
         });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [value?.time]);
 
     return (

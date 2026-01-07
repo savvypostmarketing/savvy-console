@@ -24,7 +24,7 @@ import { ArrowLeft24Regular, Save24Regular, Checkmark24Regular } from '@fluentui
 import AdminLayout from '@/Layouts/AdminLayout';
 import ImagePicker from '@/Components/ImagePicker';
 import BlockEditor from '@/Components/BlockEditor';
-import type { PostCreateProps, PostFormData, EditorJSData } from '@/interfaces/post';
+import type { PostCreateProps, EditorJSData } from '@/interfaces/post';
 
 const useStyles = makeStyles({
     header: {
@@ -77,7 +77,30 @@ export default function CreatePost({ categories, tags }: PostCreateProps) {
     const styles = useStyles();
     const [activeTab, setActiveTab] = useState('basic');
 
-    const { data, setData, post, processing, errors } = useForm<PostFormData>({
+    interface FormData {
+        title: string;
+        title_es: string;
+        slug: string;
+        category_id: string | number;
+        excerpt: string;
+        excerpt_es: string;
+        content: EditorJSData | null;
+        content_es: EditorJSData | null;
+        featured_image: File | null;
+        featured_image_alt: string;
+        featured_image_alt_es: string;
+        reading_time_minutes: number;
+        is_published: boolean;
+        is_featured: boolean;
+        meta_title: string;
+        meta_title_es: string;
+        meta_description: string;
+        meta_description_es: string;
+        tags: number[];
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, setData, post, processing, errors } = useForm<any>({
         title: '',
         title_es: '',
         slug: '',
@@ -97,7 +120,13 @@ export default function CreatePost({ categories, tags }: PostCreateProps) {
         meta_description: '',
         meta_description_es: '',
         tags: [],
-    });
+    }) as unknown as {
+        data: FormData;
+        setData: <K extends keyof FormData>(key: K, value: FormData[K]) => void;
+        post: (url: string, options?: object) => void;
+        processing: boolean;
+        errors: Partial<Record<keyof FormData, string>>;
+    };
 
     const handleBack = useCallback(() => {
         router.get('/admin/posts');
@@ -235,7 +264,11 @@ export default function CreatePost({ categories, tags }: PostCreateProps) {
                                         }
                                     >
                                         {categories.map((category) => (
-                                            <Option key={category.id} value={String(category.id)}>
+                                            <Option
+                                                key={category.id}
+                                                value={String(category.id)}
+                                                text={`${category.name} / ${category.name_es ?? ''}`}
+                                            >
                                                 {category.name} / {category.name_es}
                                             </Option>
                                         ))}

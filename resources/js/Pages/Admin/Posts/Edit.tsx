@@ -29,7 +29,7 @@ import {
 import AdminLayout from '@/Layouts/AdminLayout';
 import ImagePicker from '@/Components/ImagePicker';
 import BlockEditor from '@/Components/BlockEditor';
-import type { PostEditProps, PostFormData, EditorJSData } from '@/interfaces/post';
+import type { PostEditProps, EditorJSData } from '@/interfaces/post';
 
 const useStyles = makeStyles({
     header: {
@@ -97,34 +97,64 @@ export default function EditPost({ post, categories, tags }: PostEditProps) {
     const styles = useStyles();
     const [activeTab, setActiveTab] = useState('basic');
 
+    interface FormData {
+        title: string;
+        title_es: string;
+        slug: string;
+        category_id: string | number;
+        excerpt: string;
+        excerpt_es: string;
+        content: EditorJSData | null;
+        content_es: EditorJSData | null;
+        featured_image: File | null;
+        featured_image_alt: string;
+        featured_image_alt_es: string;
+        reading_time_minutes: number;
+        is_published: boolean;
+        is_featured: boolean;
+        meta_title: string;
+        meta_title_es: string;
+        meta_description: string;
+        meta_description_es: string;
+        tags: number[];
+        remove_featured_image: boolean;
+    }
+
     const {
         data,
         setData,
         post: submitForm,
         processing,
         errors,
-    } = useForm<PostFormData>({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } = useForm<any>({
         title: post.title,
-        title_es: post.title_es || '',
+        title_es: post.title_es ?? '',
         slug: post.slug,
         category_id: post.category_id ? String(post.category_id) : '',
-        excerpt: post.excerpt || '',
-        excerpt_es: post.excerpt_es || '',
+        excerpt: post.excerpt ?? '',
+        excerpt_es: post.excerpt_es ?? '',
         content: post.content,
         content_es: post.content_es,
         featured_image: null,
-        featured_image_alt: post.featured_image_alt || '',
-        featured_image_alt_es: post.featured_image_alt_es || '',
+        featured_image_alt: post.featured_image_alt ?? '',
+        featured_image_alt_es: post.featured_image_alt_es ?? '',
         reading_time_minutes: post.reading_time_minutes,
         is_published: post.is_published,
         is_featured: post.is_featured,
-        meta_title: post.meta_title || '',
-        meta_title_es: post.meta_title_es || '',
-        meta_description: post.meta_description || '',
-        meta_description_es: post.meta_description_es || '',
-        tags: post.tag_ids || [],
+        meta_title: post.meta_title ?? '',
+        meta_title_es: post.meta_title_es ?? '',
+        meta_description: post.meta_description ?? '',
+        meta_description_es: post.meta_description_es ?? '',
+        tags: post.tag_ids ?? [],
         remove_featured_image: false,
-    });
+    }) as unknown as {
+        data: FormData;
+        setData: <K extends keyof FormData>(key: K, value: FormData[K]) => void;
+        post: (url: string, options?: object) => void;
+        processing: boolean;
+        errors: Partial<Record<keyof FormData, string>>;
+    };
 
     const [showCurrentImage, setShowCurrentImage] = useState(!!post.featured_image_url);
 
@@ -286,7 +316,11 @@ export default function EditPost({ post, categories, tags }: PostEditProps) {
                                         }
                                     >
                                         {categories.map((category) => (
-                                            <Option key={category.id} value={String(category.id)}>
+                                            <Option
+                                                key={category.id}
+                                                value={String(category.id)}
+                                                text={`${category.name} / ${category.name_es ?? ''}`}
+                                            >
                                                 {category.name} / {category.name_es}
                                             </Option>
                                         ))}
