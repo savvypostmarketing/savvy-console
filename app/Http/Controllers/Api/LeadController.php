@@ -8,6 +8,7 @@ use App\Models\Lead;
 use App\Models\LeadStep;
 use App\Models\LeadAttempt;
 use App\Models\BlockedIp;
+use App\Services\GeoLocationService;
 use App\Services\SpamDetectionService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -20,10 +21,12 @@ use Illuminate\Support\Str;
 class LeadController extends Controller
 {
     protected SpamDetectionService $spamService;
+    protected GeoLocationService $geoService;
 
-    public function __construct(SpamDetectionService $spamService)
+    public function __construct(SpamDetectionService $spamService, GeoLocationService $geoService)
     {
         $this->spamService = $spamService;
+        $this->geoService = $geoService;
     }
 
     /**
@@ -55,8 +58,20 @@ class LeadController extends Controller
         RateLimiter::hit($rateLimitKey, 3600);
 
         try {
+            // Determine source site from request or header
+            $sourceSite = $request->input('source_site', Lead::SITE_POST_MARKETING);
+            if (!in_array($sourceSite, array_keys(Lead::SITES))) {
+                $sourceSite = Lead::SITE_POST_MARKETING;
+            }
+
+            // Get geolocation data
+            $geoData = $this->geoService->lookup($ip);
+
             $lead = Lead::create([
                 'ip_address' => $ip,
+                'country' => $geoData['country'],
+                'country_name' => $geoData['country_name'],
+                'city' => $geoData['city'],
                 'user_agent' => $request->userAgent(),
                 'referrer' => $request->header('Referer'),
                 'utm_source' => $request->input('utm_source'),
@@ -67,6 +82,7 @@ class LeadController extends Controller
                 'session_id' => $request->input('session_id'),
                 'fingerprint' => $request->input('fingerprint'),
                 'locale' => $request->input('locale', 'en'),
+                'source_site' => $sourceSite,
                 'status' => 'in_progress',
                 'current_step' => 0,
             ]);
@@ -368,6 +384,7 @@ class LeadController extends Controller
             'session_id' => $request->input('session_id'),
             'fingerprint' => $request->input('fingerprint'),
             'action' => $action,
+            'source_site' => $request->input('source_site'),
             'step_id' => $stepId,
             'request_data' => $request->except(['honeypot', 'password']),
             'is_spam' => $spamData['is_spam'] ?? false,

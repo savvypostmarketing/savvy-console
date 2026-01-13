@@ -460,12 +460,23 @@ export default function LeadShow({ lead, visitorSessions, intentBreakdown }: Lea
                                     Spam
                                 </Badge>
                             )}
+                            {lead.source_site && (
+                                <Badge appearance="outline" style={{ marginLeft: '12px' }}>
+                                    {lead.site_display ?? lead.source_site}
+                                </Badge>
+                            )}
                         </Text>
                         <Text
                             size={300}
                             style={{ display: 'block', color: tokens.colorNeutralForeground3 }}
                         >
                             {lead.email}
+                            {lead.country_name && (
+                                <span style={{ marginLeft: '8px' }}>
+                                    · {lead.city ? `${lead.city}, ` : ''}
+                                    {lead.country_name}
+                                </span>
+                            )}
                         </Text>
                     </div>
                 </div>
@@ -737,6 +748,27 @@ export default function LeadShow({ lead, visitorSessions, intentBreakdown }: Lea
                     <Text className={styles.cardTitle} size={500} weight="semibold">
                         Tracking Information
                     </Text>
+                    <div className={styles.field}>
+                        <Text className={styles.fieldLabel}>Source Site</Text>
+                        <Badge appearance="filled" color="brand">
+                            {lead.site_display ?? lead.source_site ?? '-'}
+                        </Badge>
+                    </div>
+                    <div className={styles.field}>
+                        <Text className={styles.fieldLabel}>Location</Text>
+                        <Text className={styles.fieldValue}>
+                            {[lead.city, lead.country_name].filter(Boolean).join(', ') || '-'}
+                            {lead.country && (
+                                <Badge
+                                    appearance="outline"
+                                    size="small"
+                                    style={{ marginLeft: '8px' }}
+                                >
+                                    {lead.country}
+                                </Badge>
+                            )}
+                        </Text>
+                    </div>
                     <div className={styles.field}>
                         <Text className={styles.fieldLabel}>UTM Source</Text>
                         <Text className={styles.fieldValue}>{lead.utm_source || '-'}</Text>

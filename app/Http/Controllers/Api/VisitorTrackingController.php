@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PageView;
 use App\Models\VisitorEvent;
 use App\Models\VisitorSession;
+use App\Services\GeoLocationService;
 use App\Services\IntentScoringService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,10 +16,12 @@ use Jenssegers\Agent\Agent;
 class VisitorTrackingController extends Controller
 {
     private IntentScoringService $intentService;
+    private GeoLocationService $geoService;
 
-    public function __construct(IntentScoringService $intentService)
+    public function __construct(IntentScoringService $intentService, GeoLocationService $geoService)
     {
         $this->intentService = $intentService;
+        $this->geoService = $geoService;
     }
 
     /**
@@ -40,7 +43,14 @@ class VisitorTrackingController extends Controller
             'viewport_height' => 'nullable|integer',
             'locale' => 'nullable|string|max:5',
             'timezone' => 'nullable|string|max:50',
+            'source_site' => 'nullable|string|max:50',
         ]);
+
+        // Validate source_site
+        $sourceSite = $validated['source_site'] ?? \App\Models\Lead::SITE_POST_MARKETING;
+        if (!in_array($sourceSite, array_keys(\App\Models\Lead::SITES))) {
+            $sourceSite = \App\Models\Lead::SITE_POST_MARKETING;
+        }
 
         // Try to resume existing session
         if (!empty($validated['session_token'])) {
@@ -81,6 +91,9 @@ class VisitorTrackingController extends Controller
             $referrerType = $this->determineReferrerType($referrerDomain, $validated);
         }
 
+        // Get geolocation data
+        $geoData = $this->geoService->lookup($request->ip());
+
         // Create new session
         $session = VisitorSession::create([
             'visitor_id' => $validated['visitor_id'],
@@ -92,6 +105,14 @@ class VisitorTrackingController extends Controller
             'os' => $agent->platform(),
             'os_version' => $agent->version($agent->platform()),
             'is_bot' => $agent->isRobot(),
+            // Geolocation
+            'country' => $geoData['country'],
+            'country_name' => $geoData['country_name'],
+            'region' => $geoData['region'],
+            'city' => $geoData['city'],
+            'latitude' => $geoData['latitude'],
+            'longitude' => $geoData['longitude'],
+            // Traffic source
             'referrer_url' => $validated['referrer'] ?? null,
             'referrer_domain' => $referrerDomain,
             'referrer_type' => $referrerType,
@@ -105,7 +126,8 @@ class VisitorTrackingController extends Controller
             'previous_sessions_count' => $previousSessions,
             'first_seen_at' => $firstSeen ?? now(),
             'locale' => $validated['locale'] ?? 'en',
-            'timezone' => $validated['timezone'] ?? null,
+            'source_site' => $sourceSite,
+            'timezone' => $geoData['timezone'] ?? $validated['timezone'] ?? null,
             'accept_language' => $request->header('Accept-Language'),
         ]);
 

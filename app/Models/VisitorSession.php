@@ -80,6 +80,7 @@ class VisitorSession extends Model
         'last_activity_at',
         'ended_at',
         'locale',
+        'source_site',
         'accept_language',
     ];
 
@@ -151,6 +152,11 @@ class VisitorSession extends Model
     public function scopeToday($query)
     {
         return $query->whereDate('created_at', today());
+    }
+
+    public function scopeFromSite($query, string $site)
+    {
+        return $query->where('source_site', $site);
     }
 
     // Methods

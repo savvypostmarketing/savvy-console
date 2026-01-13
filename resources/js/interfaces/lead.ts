@@ -1,5 +1,12 @@
 export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'converted' | 'lost';
 
+export type LeadSourceSite = 'savvypostmarketing' | 'savvytechinnovation';
+
+export const LEAD_SITES: Record<LeadSourceSite, string> = {
+    savvypostmarketing: 'Savvy Post Marketing',
+    savvytechinnovation: 'Savvy Tech Innovation',
+};
+
 export interface Lead {
     id: number;
     uuid: string;
@@ -18,7 +25,12 @@ export interface Lead {
     spam_score: number;
     is_spam: boolean;
     locale: string | null;
+    source_site: LeadSourceSite | null;
+    site_display: string | null;
     ip_address: string | null;
+    country: string | null;
+    country_name: string | null;
+    city: string | null;
     user_agent: string | null;
     referrer: string | null;
     landing_page: string | null;
@@ -57,6 +69,7 @@ export interface LeadAttempt {
 
 export interface LeadFilters {
     status?: string;
+    source_site?: string;
     from?: string;
     to?: string;
     search?: string;
@@ -70,6 +83,10 @@ export interface LeadStats {
     qualified: number;
     converted: number;
     spam: number;
+    by_site?: {
+        savvypostmarketing: number;
+        savvytechinnovation: number;
+    };
 }
 
 // Visitor Session types for Lead view

@@ -13,6 +13,15 @@ class Lead extends Model
 {
     use HasFactory, SoftDeletes;
 
+    // Source site constants
+    public const SITE_POST_MARKETING = 'savvypostmarketing';
+    public const SITE_TECH_INNOVATION = 'savvytechinnovation';
+
+    public const SITES = [
+        self::SITE_POST_MARKETING => 'Savvy Post Marketing',
+        self::SITE_TECH_INNOVATION => 'Savvy Tech Innovation',
+    ];
+
     protected $fillable = [
         'uuid',
         'name',
@@ -26,6 +35,9 @@ class Lead extends Model
         'message',
         'discovery_answers',
         'ip_address',
+        'country',
+        'country_name',
+        'city',
         'user_agent',
         'referrer',
         'utm_source',
@@ -43,6 +55,7 @@ class Lead extends Model
         'spam_score',
         'honeypot',
         'locale',
+        'source_site',
         'started_at',
         'completed_at',
     ];
@@ -185,5 +198,21 @@ class Lead extends Model
     public function scopeInProgress($query)
     {
         return $query->where('status', 'in_progress');
+    }
+
+    /**
+     * Scope for leads from a specific site
+     */
+    public function scopeFromSite($query, string $site)
+    {
+        return $query->where('source_site', $site);
+    }
+
+    /**
+     * Get the site display name
+     */
+    public function getSiteDisplayAttribute(): string
+    {
+        return self::SITES[$this->source_site] ?? $this->source_site;
     }
 }

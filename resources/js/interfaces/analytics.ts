@@ -1,4 +1,5 @@
 // Visitor Analytics Types
+import type { LeadSourceSite } from './lead';
 
 export interface AnalyticsStats {
     total_sessions: number;
@@ -29,6 +30,7 @@ export interface VisitorSession {
     device: string | null;
     browser: string | null;
     country: string | null;
+    country_name: string | null;
     city: string | null;
     referrer_type: string | null;
     landing_page: string | null;
@@ -38,6 +40,8 @@ export interface VisitorSession {
     completed_form: boolean;
     started_at: string | null;
     last_activity: string | null;
+    source_site: LeadSourceSite | null;
+    site_display: string | null;
 }
 
 export interface VisitorSessionDetailed extends VisitorSession {
@@ -128,4 +132,10 @@ export interface AnalyticsPeriod {
 
 export interface AnalyticsFilters {
     period: string;
+    source_site?: string;
+}
+
+export interface AnalyticsStatsBySite {
+    savvypostmarketing: number;
+    savvytechinnovation: number;
 }

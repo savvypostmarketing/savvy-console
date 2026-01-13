@@ -39,8 +39,14 @@ import type {
 } from '@/interfaces';
 
 // Types
+interface StatsBySite {
+    savvypostmarketing: number;
+    savvytechinnovation: number;
+}
+
 interface AnalyticsIndexProps {
     stats: AnalyticsStats;
+    statsBySite: StatsBySite;
     hotSessions: VisitorSession[];
     activeSessions: VisitorSession[];
     trafficSources: TrafficSource[];
@@ -48,7 +54,9 @@ interface AnalyticsIndexProps {
     topPages: TopPage[];
     dailyVisitors: DailyVisitor[];
     period: string;
+    sourceSite: string | null;
     periods: Record<string, string>;
+    sites: Record<string, string>;
 }
 
 // Styles
@@ -182,6 +190,7 @@ function formatDuration(seconds: number): string {
 
 export default function AnalyticsIndex({
     stats,
+    statsBySite,
     hotSessions,
     activeSessions,
     trafficSources,
@@ -189,7 +198,9 @@ export default function AnalyticsIndex({
     topPages,
     dailyVisitors,
     period,
+    sourceSite,
     periods,
+    sites,
 }: AnalyticsIndexProps) {
     const styles = useStyles();
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -213,16 +224,33 @@ export default function AnalyticsIndex({
     }, []);
 
     // Handlers
-    const handlePeriodChange = useCallback((_: unknown, data: { value: string }) => {
-        router.get(
-            '/admin/analytics',
-            { period: data.value },
-            {
+    const handlePeriodChange = useCallback(
+        (_: unknown, data: { value: string }) => {
+            const params: Record<string, string> = { period: data.value };
+            if (sourceSite) {
+                params.source_site = sourceSite;
+            }
+            router.get('/admin/analytics', params, {
                 preserveState: false,
                 preserveScroll: true,
+            });
+        },
+        [sourceSite]
+    );
+
+    const handleSiteChange = useCallback(
+        (_: unknown, data: { value: string }) => {
+            const params: Record<string, string> = { period };
+            if (data.value) {
+                params.source_site = data.value;
             }
-        );
-    }, []);
+            router.get('/admin/analytics', params, {
+                preserveState: false,
+                preserveScroll: true,
+            });
+        },
+        [period]
+    );
 
     const handleRefresh = useCallback(() => {
         setIsRefreshing(true);
@@ -243,6 +271,11 @@ export default function AnalyticsIndex({
                 <div>
                     <Text size={600} weight="semibold">
                         Visitor Analytics
+                        {sourceSite && sites[sourceSite] && (
+                            <Badge appearance="outline" style={{ marginLeft: '12px' }}>
+                                {sites[sourceSite]}
+                            </Badge>
+                        )}
                     </Text>
                     <div className={styles.liveIndicator}>
                         <div className={styles.liveDot} />
@@ -252,6 +285,14 @@ export default function AnalyticsIndex({
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <Select value={sourceSite || ''} onChange={handleSiteChange}>
+                        <option value="">All Sites</option>
+                        {Object.entries(sites).map(([value, label]) => (
+                            <option key={value} value={value}>
+                                {label}
+                            </option>
+                        ))}
+                    </Select>
                     <Select value={period} onChange={handlePeriodChange}>
                         {Object.entries(periods).map(([value, label]) => (
                             <option key={value} value={value}>
@@ -269,6 +310,18 @@ export default function AnalyticsIndex({
                     </Button>
                 </div>
             </div>
+
+            {/* Site Stats */}
+            {!sourceSite && (
+                <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+                    <Badge appearance="outline" style={{ padding: '8px 16px' }}>
+                        Savvy Post Marketing: {statsBySite.savvypostmarketing} sessions
+                    </Badge>
+                    <Badge appearance="outline" style={{ padding: '8px 16px' }}>
+                        Savvy Tech Innovation: {statsBySite.savvytechinnovation} sessions
+                    </Badge>
+                </div>
+            )}
 
             {/* Stats Grid */}
             <div className={styles.statsGrid}>
@@ -346,6 +399,7 @@ export default function AnalyticsIndex({
                             <TableHeader>
                                 <TableRow>
                                     <TableHeaderCell>Visitor</TableHeaderCell>
+                                    <TableHeaderCell>Site</TableHeaderCell>
                                     <TableHeaderCell>Intent</TableHeaderCell>
                                     <TableHeaderCell>Pages</TableHeaderCell>
                                     <TableHeaderCell>Actions</TableHeaderCell>
@@ -364,10 +418,17 @@ export default function AnalyticsIndex({
                                                         color: tokens.colorNeutralForeground3,
                                                     }}
                                                 >
-                                                    {session.country || 'Unknown'}{' '}
+                                                    {session.country_name ||
+                                                        session.country ||
+                                                        'Unknown'}{' '}
                                                     {session.city && `- ${session.city}`}
                                                 </Text>
                                             </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge appearance="outline" size="small">
+                                                {session.site_display || session.source_site || '-'}
+                                            </Badge>
                                         </TableCell>
                                         <TableCell>
                                             <Badge
@@ -414,6 +475,7 @@ export default function AnalyticsIndex({
                             <TableHeader>
                                 <TableRow>
                                     <TableHeaderCell>Visitor</TableHeaderCell>
+                                    <TableHeaderCell>Site</TableHeaderCell>
                                     <TableHeaderCell>Page</TableHeaderCell>
                                     <TableHeaderCell>Time</TableHeaderCell>
                                     <TableHeaderCell>Actions</TableHeaderCell>
@@ -424,6 +486,11 @@ export default function AnalyticsIndex({
                                     <TableRow key={session.id} className={styles.clickableRow}>
                                         <TableCell>
                                             <Text size={200}>{session.visitor_id}</Text>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge appearance="outline" size="small">
+                                                {session.site_display || session.source_site || '-'}
+                                            </Badge>
                                         </TableCell>
                                         <TableCell>
                                             <Text

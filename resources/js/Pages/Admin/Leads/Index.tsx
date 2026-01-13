@@ -96,6 +96,12 @@ const STATUS_OPTIONS = [
     { value: 'lost', label: 'Lost' },
 ] as const;
 
+const SITE_OPTIONS = [
+    { value: '', label: 'All Sites' },
+    { value: 'savvypostmarketing', label: 'Savvy Post Marketing' },
+    { value: 'savvytechinnovation', label: 'Savvy Tech Innovation' },
+] as const;
+
 export default function LeadsIndex({ leads, stats, filters: initialFilters }: LeadsIndexProps) {
     const styles = useStyles();
     const { filters, isFiltering, setFilter, applyFilters, handleKeyDown } =
@@ -103,6 +109,7 @@ export default function LeadsIndex({ leads, stats, filters: initialFilters }: Le
             initialFilters: {
                 search: initialFilters.search ?? '',
                 status: initialFilters.status ?? '',
+                source_site: initialFilters.source_site ?? '',
             },
             url: '/admin/leads',
         });
@@ -126,19 +133,46 @@ export default function LeadsIndex({ leads, stats, filters: initialFilters }: Le
             if (data.value) {
                 params.status = data.value;
             }
+            if (filters.source_site) {
+                params.source_site = filters.source_site;
+            }
 
             router.get('/admin/leads', params, {
                 preserveState: false,
                 preserveScroll: true,
             });
         },
-        [setFilter, filters.search]
+        [setFilter, filters.search, filters.source_site]
+    );
+
+    const handleSiteChange = useCallback(
+        (_: unknown, data: { value: string }) => {
+            setFilter('source_site', data.value);
+            // Auto-apply filter on site change
+            const params: Record<string, string> = {};
+            if (filters.search) {
+                params.search = filters.search;
+            }
+            if (filters.status) {
+                params.status = filters.status;
+            }
+            if (data.value) {
+                params.source_site = data.value;
+            }
+
+            router.get('/admin/leads', params, {
+                preserveState: false,
+                preserveScroll: true,
+            });
+        },
+        [setFilter, filters.search, filters.status]
     );
 
     const handleExport = useCallback(() => {
         const params = buildSearchParams({
             status: filters.status,
             search: filters.search,
+            source_site: filters.source_site,
         });
         window.location.href = `/admin/leads/export?${params}`;
     }, [filters]);
@@ -164,6 +198,8 @@ export default function LeadsIndex({ leads, stats, filters: initialFilters }: Le
         (lead: Lead) => {
             const servicesDisplay = formatArrayWithLimit(lead.services, 2);
             const statusColor = getStatusColor(lead.status);
+            const locationDisplay =
+                [lead.city, lead.country_name].filter(Boolean).join(', ') || '-';
 
             return (
                 <TableRow key={lead.id} className={styles.clickableRow}>
@@ -183,7 +219,12 @@ export default function LeadsIndex({ leads, stats, filters: initialFilters }: Le
                             {lead.status}
                         </Badge>
                     </TableCell>
-                    <TableCell>{lead.utm_source ?? '-'}</TableCell>
+                    <TableCell>
+                        <Badge appearance="outline" size="small">
+                            {lead.site_display ?? lead.source_site ?? '-'}
+                        </Badge>
+                    </TableCell>
+                    <TableCell>{locationDisplay}</TableCell>
                     <TableCell>{lead.created_at}</TableCell>
                     <TableCell>
                         <Link href={`/admin/leads/${lead.id}`}>
@@ -282,6 +323,13 @@ export default function LeadsIndex({ leads, stats, filters: initialFilters }: Le
                             </option>
                         ))}
                     </Select>
+                    <Select value={filters.source_site ?? ''} onChange={handleSiteChange}>
+                        {SITE_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </Select>
                     <Button
                         appearance="primary"
                         icon={isFiltering ? <Spinner size="tiny" /> : <Filter24Regular />}
@@ -300,7 +348,8 @@ export default function LeadsIndex({ leads, stats, filters: initialFilters }: Le
                             <TableHeaderCell>Company</TableHeaderCell>
                             <TableHeaderCell>Services</TableHeaderCell>
                             <TableHeaderCell>Status</TableHeaderCell>
-                            <TableHeaderCell>Source</TableHeaderCell>
+                            <TableHeaderCell>Site</TableHeaderCell>
+                            <TableHeaderCell>Location</TableHeaderCell>
                             <TableHeaderCell>Date</TableHeaderCell>
                             <TableHeaderCell>Actions</TableHeaderCell>
                         </TableRow>
@@ -310,7 +359,7 @@ export default function LeadsIndex({ leads, stats, filters: initialFilters }: Le
                             leads.data.map(renderLeadRow)
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={8}>
+                                <TableCell colSpan={9}>
                                     <Text className={styles.noData}>No leads found</Text>
                                 </TableCell>
                             </TableRow>

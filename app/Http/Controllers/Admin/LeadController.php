@@ -18,6 +18,11 @@ class LeadController extends Controller
     {
         $query = Lead::with('steps')->latest();
 
+        // Filter by source site
+        if ($request->filled('source_site')) {
+            $query->where('source_site', $request->source_site);
+        }
+
         // Filter by status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -53,6 +58,11 @@ class LeadController extends Controller
             'spam_score' => $lead->spam_score,
             'is_spam' => $lead->is_spam,
             'steps_count' => $lead->steps->count(),
+            'country' => $lead->country,
+            'country_name' => $lead->country_name,
+            'city' => $lead->city,
+            'source_site' => $lead->source_site,
+            'site_display' => $lead->site_display,
             'utm_source' => $lead->utm_source,
             'utm_medium' => $lead->utm_medium,
             'utm_campaign' => $lead->utm_campaign,
@@ -60,19 +70,41 @@ class LeadController extends Controller
             'updated_at' => $lead->updated_at->format('Y-m-d H:i:s'),
         ]);
 
+        // Stats per site if filtered, or global
+        $statsQuery = Lead::query();
+        if ($request->filled('source_site')) {
+            $statsQuery->where('source_site', $request->source_site);
+        }
+
         $stats = [
-            'total' => Lead::count(),
-            'new' => Lead::where('status', 'new')->count(),
-            'contacted' => Lead::where('status', 'contacted')->count(),
-            'qualified' => Lead::where('status', 'qualified')->count(),
-            'converted' => Lead::where('status', 'converted')->count(),
-            'spam' => Lead::where('is_spam', true)->count(),
+            'total' => $statsQuery->count(),
+            'new' => (clone $statsQuery)->where('status', 'new')->count(),
+            'contacted' => (clone $statsQuery)->where('status', 'contacted')->count(),
+            'qualified' => (clone $statsQuery)->where('status', 'qualified')->count(),
+            'converted' => (clone $statsQuery)->where('status', 'converted')->count(),
+            'spam' => (clone $statsQuery)->where('is_spam', true)->count(),
+        ];
+
+        // Stats by site for the dashboard
+        $statsBySite = [
+            Lead::SITE_POST_MARKETING => [
+                'name' => Lead::SITES[Lead::SITE_POST_MARKETING],
+                'total' => Lead::where('source_site', Lead::SITE_POST_MARKETING)->count(),
+                'completed' => Lead::where('source_site', Lead::SITE_POST_MARKETING)->where('status', 'completed')->count(),
+            ],
+            Lead::SITE_TECH_INNOVATION => [
+                'name' => Lead::SITES[Lead::SITE_TECH_INNOVATION],
+                'total' => Lead::where('source_site', Lead::SITE_TECH_INNOVATION)->count(),
+                'completed' => Lead::where('source_site', Lead::SITE_TECH_INNOVATION)->where('status', 'completed')->count(),
+            ],
         ];
 
         return Inertia::render('Admin/Leads/Index', [
             'leads' => $leads,
             'stats' => $stats,
-            'filters' => $request->only(['status', 'from', 'to', 'search']),
+            'statsBySite' => $statsBySite,
+            'sites' => Lead::SITES,
+            'filters' => $request->only(['status', 'from', 'to', 'search', 'source_site']),
         ]);
     }
 
@@ -124,7 +156,12 @@ class LeadController extends Controller
                 'spam_score' => $lead->spam_score,
                 'is_spam' => $lead->is_spam,
                 'locale' => $lead->locale,
+                'source_site' => $lead->source_site,
+                'site_display' => $lead->site_display,
                 'ip_address' => $lead->ip_address,
+                'country' => $lead->country,
+                'country_name' => $lead->country_name,
+                'city' => $lead->city,
                 'user_agent' => $lead->user_agent,
                 'referrer' => $lead->referrer,
                 'landing_page' => $lead->landing_page,
@@ -266,6 +303,11 @@ class LeadController extends Controller
     {
         $query = Lead::query();
 
+        // Filter by source site
+        if ($request->filled('source_site')) {
+            $query->where('source_site', $request->source_site);
+        }
+
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
@@ -291,8 +333,8 @@ class LeadController extends Controller
             // Header row
             fputcsv($file, [
                 'ID', 'Name', 'Email', 'Phone', 'Company', 'Services',
-                'Budget', 'Timeline', 'Status', 'UTM Source', 'UTM Medium',
-                'UTM Campaign', 'Created At'
+                'Budget', 'Timeline', 'Status', 'Country', 'City', 'Source Site',
+                'UTM Source', 'UTM Medium', 'UTM Campaign', 'Created At'
             ]);
 
             // Data rows
@@ -307,6 +349,9 @@ class LeadController extends Controller
                     $lead->budget,
                     $lead->timeline,
                     $lead->status,
+                    $lead->country_name ?? $lead->country,
+                    $lead->city,
+                    $lead->site_display,
                     $lead->utm_source,
                     $lead->utm_medium,
                     $lead->utm_campaign,

@@ -77,6 +77,8 @@ interface RecentLead {
     email: string | null;
     status: LeadStatus;
     services: string[];
+    source_site: string | null;
+    site_display: string | null;
     created_at: string;
 }
 
@@ -87,6 +89,10 @@ interface DashboardStats {
     converted_leads: number;
     total_users: number;
     recent_leads: RecentLead[];
+    leads_by_site?: {
+        savvypostmarketing: number;
+        savvytechinnovation: number;
+    };
 }
 
 interface DashboardProps {
@@ -180,6 +186,11 @@ export default function Dashboard({ stats }: DashboardProps) {
                         {lead.status}
                     </Badge>
                 </TableCell>
+                <TableCell>
+                    <Badge appearance="outline" size="small">
+                        {lead.site_display || lead.source_site || '-'}
+                    </Badge>
+                </TableCell>
                 <TableCell>{lead.created_at}</TableCell>
             </TableRow>
         );
@@ -190,6 +201,18 @@ export default function Dashboard({ stats }: DashboardProps) {
             <Head title="Dashboard" />
 
             <div className={styles.statsGrid}>{statCards.map(renderStatCard)}</div>
+
+            {/* Site Stats */}
+            {stats.leads_by_site && (
+                <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
+                    <Badge appearance="outline" style={{ padding: '8px 16px' }}>
+                        Savvy Post Marketing: {stats.leads_by_site.savvypostmarketing} leads
+                    </Badge>
+                    <Badge appearance="outline" style={{ padding: '8px 16px' }}>
+                        Savvy Tech Innovation: {stats.leads_by_site.savvytechinnovation} leads
+                    </Badge>
+                </div>
+            )}
 
             <Card className={styles.recentCard}>
                 <Text className={styles.cardTitle} size={500} weight="semibold">
@@ -203,6 +226,7 @@ export default function Dashboard({ stats }: DashboardProps) {
                             <TableHeaderCell>Email</TableHeaderCell>
                             <TableHeaderCell>Services</TableHeaderCell>
                             <TableHeaderCell>Status</TableHeaderCell>
+                            <TableHeaderCell>Site</TableHeaderCell>
                             <TableHeaderCell>Created</TableHeaderCell>
                         </TableRow>
                     </TableHeader>
@@ -211,7 +235,7 @@ export default function Dashboard({ stats }: DashboardProps) {
                             stats.recent_leads.map(renderLeadRow)
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={5}>
+                                <TableCell colSpan={6}>
                                     <Text className={styles.noData}>No leads yet</Text>
                                 </TableCell>
                             </TableRow>

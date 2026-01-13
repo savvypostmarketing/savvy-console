@@ -22,6 +22,10 @@ class DashboardController extends Controller
             'contacted_leads' => Lead::where('status', 'contacted')->count(),
             'converted_leads' => Lead::where('status', 'converted')->count(),
             'total_users' => User::count(),
+            'leads_by_site' => [
+                'savvypostmarketing' => Lead::where('source_site', Lead::SITE_POST_MARKETING)->count(),
+                'savvytechinnovation' => Lead::where('source_site', Lead::SITE_TECH_INNOVATION)->count(),
+            ],
             'recent_leads' => Lead::with('steps')
                 ->latest()
                 ->take(5)
@@ -33,6 +37,8 @@ class DashboardController extends Controller
                     'email' => $lead->email,
                     'status' => $lead->status,
                     'services' => $lead->services,
+                    'source_site' => $lead->source_site,
+                    'site_display' => $lead->site_display,
                     'created_at' => $lead->created_at->diffForHumans(),
                 ]),
         ];

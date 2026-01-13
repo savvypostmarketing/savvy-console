@@ -17,6 +17,7 @@ class LeadAttempt extends Model
         'session_id',
         'fingerprint',
         'action',
+        'source_site',
         'step_id',
         'request_data',
         'is_spam',

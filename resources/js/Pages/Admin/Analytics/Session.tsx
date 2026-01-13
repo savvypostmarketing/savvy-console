@@ -29,6 +29,7 @@ import {
     Person24Regular,
     Form24Regular,
     Video24Regular,
+    Building24Regular,
 } from '@fluentui/react-icons';
 import AdminLayout from '@/Layouts/AdminLayout';
 import type {
@@ -223,6 +224,11 @@ export default function SessionDetail({
                 <div>
                     <Text size={600} weight="semibold">
                         Session Details
+                        {session.site_display && (
+                            <Badge appearance="outline" style={{ marginLeft: '12px' }}>
+                                {session.site_display}
+                            </Badge>
+                        )}
                     </Text>
                     <Text className={styles.sessionId}>{session.uuid}</Text>
                 </div>
@@ -342,6 +348,13 @@ export default function SessionDetail({
                         <Text weight="semibold">Session Information</Text>
                     </div>
                     <div className={styles.infoRow}>
+                        <Building24Regular className={styles.infoIcon} />
+                        <Text className={styles.infoLabel}>Source Site</Text>
+                        <Badge appearance="filled" color="brand">
+                            {session.site_display || session.source_site || 'Unknown'}
+                        </Badge>
+                    </div>
+                    <div className={styles.infoRow}>
                         <Person24Regular className={styles.infoIcon} />
                         <Text className={styles.infoLabel}>Visitor ID</Text>
                         <Text style={{ fontFamily: 'monospace', fontSize: '12px' }}>
@@ -352,7 +365,8 @@ export default function SessionDetail({
                         <Location24Regular className={styles.infoIcon} />
                         <Text className={styles.infoLabel}>Location</Text>
                         <Text>
-                            {session.city || 'Unknown'}, {session.country || 'Unknown'}
+                            {session.city || 'Unknown'},{' '}
+                            {session.country_name || session.country || 'Unknown'}
                         </Text>
                     </div>
                     <div className={styles.infoRow}>

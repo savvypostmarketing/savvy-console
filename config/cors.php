@@ -21,14 +21,23 @@ return [
 
     'allowed_origins' => [
         'http://localhost:3000',
+        'http://localhost:3001',
         'https://localhost:3000',
+        'https://localhost:3001',
+        // Savvy Post Marketing
         'https://savvypostmarketing.com',
         'https://www.savvypostmarketing.com',
+        // Savvy Tech Innovation
+        'https://savvytechinnovation.com',
+        'https://www.savvytechinnovation.com',
+        // Environment URLs
         env('FRONTEND_URL', 'http://localhost:3000'),
+        env('FRONTEND_URL_TECH', 'http://localhost:3001'),
     ],
 
     'allowed_origins_patterns' => [
         '#^https?://.*\.savvypostmarketing\.com$#',
+        '#^https?://.*\.savvytechinnovation\.com$#',
         '#^https?://.*\.vercel\.app$#',
     ],
 

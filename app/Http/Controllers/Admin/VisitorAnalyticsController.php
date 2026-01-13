@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Lead;
 use App\Models\PageView;
 use App\Models\VisitorEvent;
 use App\Models\VisitorSession;
@@ -20,43 +21,67 @@ class VisitorAnalyticsController extends Controller
     public function index(Request $request): Response
     {
         $period = $request->get('period', '7d');
+        $sourceSite = $request->get('source_site');
         $startDate = $this->getStartDate($period);
 
+        // Base query builder with optional site filter
+        $baseQuery = fn () => VisitorSession::where('created_at', '>=', $startDate)
+            ->when($sourceSite, fn ($q) => $q->where('source_site', $sourceSite));
+
         // Overview stats
-        $stats = $this->getOverviewStats($startDate);
+        $stats = $this->getOverviewStats($startDate, $sourceSite);
+
+        // Stats by site
+        $statsBySite = [
+            'savvypostmarketing' => VisitorSession::where('created_at', '>=', $startDate)
+                ->where('source_site', Lead::SITE_POST_MARKETING)
+                ->count(),
+            'savvytechinnovation' => VisitorSession::where('created_at', '>=', $startDate)
+                ->where('source_site', Lead::SITE_TECH_INNOVATION)
+                ->count(),
+        ];
 
         // Recent sessions with high intent
-        $hotSessions = VisitorSession::where('intent_level', 'hot')
-            ->orWhere('intent_level', 'qualified')
-            ->where('created_at', '>=', $startDate)
+        $hotSessions = $baseQuery()
+            ->where(function ($q) {
+                $q->where('intent_level', 'hot')
+                    ->orWhere('intent_level', 'qualified');
+            })
             ->orderBy('intent_score', 'desc')
             ->limit(10)
             ->get()
             ->map(fn ($session) => $this->formatSession($session));
 
         // Active sessions (last 30 minutes)
-        $activeSessions = VisitorSession::recent(30)
+        $activeQuery = VisitorSession::recent(30)
+            ->when($sourceSite, fn ($q) => $q->where('source_site', $sourceSite));
+        $activeSessions = $activeQuery
             ->orderBy('last_activity_at', 'desc')
             ->limit(20)
             ->get()
             ->map(fn ($session) => $this->formatSession($session));
 
         // Traffic sources breakdown
-        $trafficSources = VisitorSession::where('created_at', '>=', $startDate)
+        $trafficSources = $baseQuery()
             ->select('referrer_type', DB::raw('count(*) as count'))
             ->groupBy('referrer_type')
             ->orderBy('count', 'desc')
             ->get();
 
         // Intent distribution
-        $intentDistribution = VisitorSession::where('created_at', '>=', $startDate)
+        $intentDistribution = $baseQuery()
             ->select('intent_level', DB::raw('count(*) as count'))
             ->groupBy('intent_level')
             ->orderBy('count', 'desc')
             ->get();
 
         // Top pages
-        $topPages = PageView::where('created_at', '>=', $startDate)
+        $topPagesQuery = PageView::where('created_at', '>=', $startDate);
+        if ($sourceSite) {
+            $sessionIds = VisitorSession::where('source_site', $sourceSite)->pluck('id');
+            $topPagesQuery->whereIn('visitor_session_id', $sessionIds);
+        }
+        $topPages = $topPagesQuery
             ->select('path', 'page_type', DB::raw('count(*) as views'), DB::raw('avg(time_on_page_seconds) as avg_time'))
             ->groupBy('path', 'page_type')
             ->orderBy('views', 'desc')
@@ -64,10 +89,11 @@ class VisitorAnalyticsController extends Controller
             ->get();
 
         // Daily visitors chart data
-        $dailyVisitors = $this->getDailyVisitors($startDate);
+        $dailyVisitors = $this->getDailyVisitors($startDate, $sourceSite);
 
         return Inertia::render('Admin/Analytics/Index', [
             'stats' => $stats,
+            'statsBySite' => $statsBySite,
             'hotSessions' => $hotSessions,
             'activeSessions' => $activeSessions,
             'trafficSources' => $trafficSources,
@@ -75,12 +101,14 @@ class VisitorAnalyticsController extends Controller
             'topPages' => $topPages,
             'dailyVisitors' => $dailyVisitors,
             'period' => $period,
+            'sourceSite' => $sourceSite,
             'periods' => [
                 '24h' => 'Last 24 Hours',
                 '7d' => 'Last 7 Days',
                 '30d' => 'Last 30 Days',
                 '90d' => 'Last 90 Days',
             ],
+            'sites' => Lead::SITES,
         ]);
     }
 
@@ -162,32 +190,43 @@ class VisitorAnalyticsController extends Controller
     /**
      * Get overview statistics.
      */
-    private function getOverviewStats(\DateTime $startDate): array
+    private function getOverviewStats(\DateTime $startDate, ?string $sourceSite = null): array
     {
-        $totalSessions = VisitorSession::where('created_at', '>=', $startDate)->count();
-        $uniqueVisitors = VisitorSession::where('created_at', '>=', $startDate)
+        $baseQuery = fn () => VisitorSession::where('created_at', '>=', $startDate)
+            ->when($sourceSite, fn ($q) => $q->where('source_site', $sourceSite));
+
+        $totalSessions = $baseQuery()->count();
+        $uniqueVisitors = $baseQuery()
             ->distinct('visitor_id')
             ->count('visitor_id');
-        $totalPageViews = PageView::where('created_at', '>=', $startDate)->count();
-        $avgSessionDuration = VisitorSession::where('created_at', '>=', $startDate)
+
+        // Page views with site filter
+        $pageViewsQuery = PageView::where('created_at', '>=', $startDate);
+        if ($sourceSite) {
+            $sessionIds = VisitorSession::where('source_site', $sourceSite)->pluck('id');
+            $pageViewsQuery->whereIn('visitor_session_id', $sessionIds);
+        }
+        $totalPageViews = $pageViewsQuery->count();
+
+        $avgSessionDuration = $baseQuery()
             ->where('status', 'ended')
             ->avg('total_time_seconds') ?? 0;
         $avgPagesPerSession = $totalSessions > 0 ? $totalPageViews / $totalSessions : 0;
-        $bounceRate = $this->calculateBounceRate($startDate);
-        $conversionRate = $this->calculateConversionRate($startDate);
+        $bounceRate = $this->calculateBounceRate($startDate, $sourceSite);
+        $conversionRate = $this->calculateConversionRate($startDate, $sourceSite);
 
         // Intent metrics
-        $hotLeads = VisitorSession::where('created_at', '>=', $startDate)
+        $hotLeads = $baseQuery()
             ->where('intent_level', 'hot')
             ->count();
-        $qualifiedLeads = VisitorSession::where('created_at', '>=', $startDate)
+        $qualifiedLeads = $baseQuery()
             ->where('intent_level', 'qualified')
             ->count();
-        $avgIntentScore = VisitorSession::where('created_at', '>=', $startDate)
+        $avgIntentScore = $baseQuery()
             ->avg('intent_score') ?? 0;
 
         // Returning visitors
-        $returningVisitors = VisitorSession::where('created_at', '>=', $startDate)
+        $returningVisitors = $baseQuery()
             ->where('is_returning', true)
             ->count();
         $returningRate = $totalSessions > 0 ? ($returningVisitors / $totalSessions) * 100 : 0;
@@ -210,12 +249,15 @@ class VisitorAnalyticsController extends Controller
     /**
      * Calculate bounce rate.
      */
-    private function calculateBounceRate(\DateTime $startDate): float
+    private function calculateBounceRate(\DateTime $startDate, ?string $sourceSite = null): float
     {
-        $totalSessions = VisitorSession::where('created_at', '>=', $startDate)->count();
+        $baseQuery = fn () => VisitorSession::where('created_at', '>=', $startDate)
+            ->when($sourceSite, fn ($q) => $q->where('source_site', $sourceSite));
+
+        $totalSessions = $baseQuery()->count();
         if ($totalSessions === 0) return 0;
 
-        $bouncedSessions = VisitorSession::where('created_at', '>=', $startDate)
+        $bouncedSessions = $baseQuery()
             ->where('page_views_count', 1)
             ->where('total_time_seconds', '<', 10)
             ->count();
@@ -226,12 +268,15 @@ class VisitorAnalyticsController extends Controller
     /**
      * Calculate conversion rate.
      */
-    private function calculateConversionRate(\DateTime $startDate): float
+    private function calculateConversionRate(\DateTime $startDate, ?string $sourceSite = null): float
     {
-        $totalSessions = VisitorSession::where('created_at', '>=', $startDate)->count();
+        $baseQuery = fn () => VisitorSession::where('created_at', '>=', $startDate)
+            ->when($sourceSite, fn ($q) => $q->where('source_site', $sourceSite));
+
+        $totalSessions = $baseQuery()->count();
         if ($totalSessions === 0) return 0;
 
-        $conversions = VisitorSession::where('created_at', '>=', $startDate)
+        $conversions = $baseQuery()
             ->where('completed_form', true)
             ->count();
 
@@ -241,9 +286,10 @@ class VisitorAnalyticsController extends Controller
     /**
      * Get daily visitors data for chart.
      */
-    private function getDailyVisitors(\DateTime $startDate): array
+    private function getDailyVisitors(\DateTime $startDate, ?string $sourceSite = null): array
     {
         return VisitorSession::where('created_at', '>=', $startDate)
+            ->when($sourceSite, fn ($q) => $q->where('source_site', $sourceSite))
             ->select(
                 DB::raw('DATE(created_at) as date'),
                 DB::raw('count(*) as sessions'),
@@ -281,7 +327,8 @@ class VisitorAnalyticsController extends Controller
             'duration_formatted' => $this->formatDuration($session->total_time_seconds),
             'device' => $session->device_type,
             'browser' => $session->browser,
-            'country' => $session->country_name ?? $session->country,
+            'country' => $session->country,
+            'country_name' => $session->country_name ?? $session->country,
             'city' => $session->city,
             'referrer_type' => $session->referrer_type,
             'landing_page' => $session->landing_page,
@@ -291,6 +338,8 @@ class VisitorAnalyticsController extends Controller
             'completed_form' => $session->completed_form,
             'started_at' => $session->started_at?->format('Y-m-d H:i:s'),
             'last_activity' => $session->last_activity_at?->diffForHumans(),
+            'source_site' => $session->source_site,
+            'site_display' => Lead::SITES[$session->source_site] ?? $session->source_site,
         ];
 
         if ($detailed) {
